@@ -161,9 +161,26 @@ function App() {
     return { isValid: tilesToFlip.length > 0, tilesToFlip };
   };
 
+  const resetGame = () => {
+    setBoard(() => {
+      const initialBoard = Array(8).fill(null).map(() => Array(8).fill(null));
+      initialBoard[3][3] = 'white';
+      initialBoard[3][4] = 'black';
+      initialBoard[4][3] = 'black';
+      initialBoard[4][4] = 'white';
+      return initialBoard;
+    });
+    setTurn('black');
+    setAvailableMoves([]);
+    setGameOver(false);
+    setWinner(null);
+    setTurnsLeft(60);
+    setBlackCount(2);
+    setWhiteCount(2);
+  };
 
   return (
-    <div className="bg-white dark:bg-gray-800 text-black dark:text-white">
+    <div className="flex flex-col justify-center items-center bg-white dark:bg-gray-800 text-black dark:text-white">
       <h1>Othello</h1>
       <button onClick={toggleTheme} className="mb-4 p-2 border rounded">
         Switch to {isDarkTheme ? 'Light' : 'Dark'} Theme
@@ -171,6 +188,12 @@ function App() {
       <div className="flex justify-between items-center mb-4">
         <span className={`p-2 rounded-full ${turn === 'black' ? 'border-4 border-yellow-400' : ''}`}>Black: {blackCount}</span>
         <span className={`p-2 rounded-full ${turn === 'white' ? 'border-4 border-yellow-400' : ''}`}>White: {whiteCount}</span>
+      </div>
+      <div>
+        <span> Turns Left: {turnsLeft} </span>
+        <button onClick={()=> resetGame()}
+          className='p-2 border rounded'>
+          Reset</button>
       </div>
       {gameOver && (
         <div className="text-center">
@@ -191,11 +214,6 @@ function App() {
             ))}
           </div>
         ))}
-      </div>
-      <div>
-        <p>
-          Turns Left: {turnsLeft}
-        </p>
       </div>
     </div>
   )
