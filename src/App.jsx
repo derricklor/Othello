@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import './App.css'
 import Tile from './components/Tile'
 
 function App() {
@@ -18,6 +17,28 @@ function App() {
   const [turnsLeft, setTurnsLeft] = useState(60);
   const [blackCount, setBlackCount] = useState(2);
   const [whiteCount, setWhiteCount] = useState(2);
+
+  const [isDarkTheme, setIsDarkTheme] = useState(() => {
+		// Check for saved theme preference on component mount
+		const savedTheme = localStorage.getItem('theme');
+		return savedTheme === 'dark';
+	});
+
+	// useEffect to apply/remove 'dark' class to body and update localStorage
+	useEffect(() => {
+		if (isDarkTheme) {
+			document.body.classList.add('dark');
+			localStorage.setItem('theme', 'dark');
+		} else {
+			document.body.classList.remove('dark');
+			localStorage.setItem('theme', 'light');
+		}
+	}, [isDarkTheme]); // Re-run when isDarkTheme changes
+
+  // Function to toggle the theme
+	const toggleTheme = () => {
+		setIsDarkTheme(!isDarkTheme);
+	};
 
   useEffect(() => {
     const calculateAvailableMoves = () => {
@@ -142,8 +163,11 @@ function App() {
 
 
   return (
-    <>
+    <div className="bg-white dark:bg-gray-800 text-black dark:text-white">
       <h1>Othello</h1>
+      <button onClick={toggleTheme} className="mb-4 p-2 border rounded">
+        Switch to {isDarkTheme ? 'Light' : 'Dark'} Theme
+      </button>
       <div className="flex justify-between items-center mb-4">
         <span className={`p-2 rounded-full ${turn === 'black' ? 'border-4 border-yellow-400' : ''}`}>Black: {blackCount}</span>
         <span className={`p-2 rounded-full ${turn === 'white' ? 'border-4 border-yellow-400' : ''}`}>White: {whiteCount}</span>
@@ -173,7 +197,7 @@ function App() {
           Turns Left: {turnsLeft}
         </p>
       </div>
-    </>
+    </div>
   )
 }
 
