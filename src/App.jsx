@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import Tile from './components/Tile'
-import { isValidMove, getAvailableMoves, evalMove } from './Othello.js'
+import { isValidMove, getAvailableMoves, getAIMove } from './Othello.js'
 
 function App() {
     const [board, setBoard] = useState(() => {
@@ -19,6 +19,7 @@ function App() {
     const [blackCount, setBlackCount] = useState(2);
     const [whiteCount, setWhiteCount] = useState(2);
 
+    const [mode, setMode] = useState('pve');// 'pvp' or 'pve'
     const [difficulty, setDifficulty] = useState('easy');
 
     const [isDarkTheme, setIsDarkTheme] = useState(() => {
@@ -42,6 +43,20 @@ function App() {
     const toggleTheme = () => {
         setIsDarkTheme(!isDarkTheme);
     };
+
+    // AI move logic
+    useEffect(() => {
+        if (mode === 'pve' && turn === 'white' && !gameOver) {
+            // AI's turn
+            const timer = setTimeout(() => {
+                const aiMove = getAIMove(board, 'white', difficulty);
+                if (aiMove) {
+                    makeMove(aiMove[0], aiMove[1]);
+                }
+            }, 1000); // 1-second delay for AI move
+            return () => clearTimeout(timer); // Cleanup timer on re-render
+        }
+    }, [turn, mode, gameOver, board, difficulty]);
 
     useEffect(() => {
         if (gameOver) return;
@@ -93,8 +108,8 @@ function App() {
         }
     }, [blackCount, whiteCount]);
 
-    const handleTileClick = (rowIndex, colIndex) => {
-        if (gameOver) return;
+    // General move execution logic
+    const makeMove = (rowIndex, colIndex) => {
         const { isValid, tilesToFlip } = isValidMove(rowIndex, colIndex, turn, board);
         if (isValid) {
             const newBoard = board.map(row => [...row]);
@@ -114,6 +129,15 @@ function App() {
             setTurn(turn === 'black' ? 'white' : 'black');
             setTurnsLeft(turnsLeft - 1);
         }
+    };
+
+    // Click handler for human players
+    const handleTileClick = (rowIndex, colIndex) => {
+        if (gameOver) return;
+        // Prevent player from moving during AI's turn
+        if (mode === 'pve' && turn === 'white') return;
+
+        makeMove(rowIndex, colIndex);
     }
 
 
@@ -138,14 +162,27 @@ function App() {
     return (
         <div className="flex flex-col justify-center items-center bg-white dark:bg-gray-800 text-black dark:text-white">
             <h1>Othello</h1>
-            <button onClick={toggleTheme} className="mb-4 p-2 border rounded">
-                Switch to {isDarkTheme ? 'Light' : 'Dark'} Theme
-            </button>
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex space-x-4 mb-4">
+                <button onClick={toggleTheme} className="p-2 border rounded">
+                    Switch to {isDarkTheme ? 'Light' : 'Dark'} Theme
+                </button>
+                <select value={mode} onChange={(e) => setMode(e.target.value)} className="p-2 border rounded bg-white dark:bg-gray-700">
+                    <option value="pvp">Player vs Player</option>
+                    <option value="pve">Player vs AI</option>
+                </select>
+                {mode === 'pve' && (
+                    <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="p-2 border rounded bg-white dark:bg-gray-700">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                )}
+            </div>
+            <div className="flex justify-between items-center mb-4 w-64">
                 <span className={`p-2 rounded-full ${turn === 'black' ? 'border-4 border-yellow-400' : ''}`}>Black: {blackCount}</span>
                 <span className={`p-2 rounded-full ${turn === 'white' ? 'border-4 border-yellow-400' : ''}`}>White: {whiteCount}</span>
             </div>
-            <div>
+            <div className="flex items-center space-x-4 mb-4">
                 <span> Turns Left: {turnsLeft} </span>
                 <button onClick={() => resetGame()}
                     className='p-2 border rounded'>
